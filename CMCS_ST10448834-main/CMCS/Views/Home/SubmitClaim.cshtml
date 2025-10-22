@@ -1,0 +1,108 @@
+﻿@model CMCS.Models.ClaimSubmissionViewModel
+@{
+    ViewData["Title"] = "Submit Claim";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Submit New Claim
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="SubmitClaim" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="HoursWorked" class="form-label">
+                                <i class="fas fa-clock me-1"></i>Hours Worked
+                            </label>
+                            <input asp-for="HoursWorked" class="form-control" placeholder="Enter hours worked" />
+                            <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="HourlyRate" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Hourly Rate
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="HourlyRate" class="form-control" placeholder="Enter hourly rate" />
+                            </div>
+                            <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label">
+                            <i class="fas fa-sticky-note me-1"></i>Additional Notes
+                        </label>
+                        <textarea asp-for="Notes" class="form-control" rows="4" placeholder="Enter any additional notes or comments..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                        <div class="form-text">Optional: Add any relevant details about your claim.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file-upload me-1"></i>Supporting Documents
+                        </label>
+                        <input asp-for="SupportingDocuments" type="file" class="form-control" multiple
+                               accept=".pdf,.docx,.xlsx" />
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Supported formats: PDF, DOCX, XLSX (Max 10MB per file)
+                        </div>
+                    </div>
+
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title text-primary">
+                                <i class="fas fa-calculator me-1"></i>Claim Summary
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Hours:</strong> <span id="hours-display">0</span></p>
+                                    <p class="mb-1"><strong>Rate:</strong> $<span id="rate-display">0.00</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-0"><strong>Total Amount:</strong> $<span id="total-display">0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Claim
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function updateSummary() {
+                var hours = parseFloat($('#HoursWorked').val()) || 0;
+                var rate = parseFloat($('#HourlyRate').val()) || 0;
+                var total = hours * rate;
+
+                $('#hours-display').text(hours.toFixed(1));
+                $('#rate-display').text(rate.toFixed(2));
+                $('#total-display').text(total.toFixed(2));
+            }
+
+            $('#HoursWorked, #HourlyRate').on('input', updateSummary);
+            updateSummary();
+        });
+    </script>
+}

@@ -1,0 +1,150 @@
+﻿@model IEnumerable<CMCS.Models.Claim>
+@{
+    ViewData["Title"] = "Coordinator Dashboard";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-primary">
+                <i class="fas fa-user-tie me-2"></i>Programme Coordinator Dashboard
+            </h1>
+            <span class="badge bg-warning fs-6">
+                <i class="fas fa-clock me-1"></i>@Model.Count() Pending Claims
+            </span>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h4 class="text-muted">No Pending Claims</h4>
+                    <p class="text-muted">All claims have been processed. Great job!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var claim in Model)
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-invoice me-2"></i>Claim #@claim.ClaimId
+                            </h5>
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-clock me-1"></i>@claim.Status
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Hours Worked:</strong><br>
+                                <span class="text-primary fs-5">@claim.HoursWorked</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Hourly Rate:</strong><br>
+                                <span class="text-primary fs-5">$@claim.HourlyRate.ToString("F2")</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Total Amount:</strong><br>
+                                <span class="text-success fs-4 fw-bold">$@claim.TotalAmount.ToString("F2")</span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(claim.Notes))
+                        {
+                            <div class="mb-3">
+                                <strong>Notes:</strong><br>
+                                <p class="text-muted mb-0">@claim.Notes</p>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <strong>Submitted:</strong><br>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>@claim.SubmittedDate.ToString("MMM dd, yyyy HH:mm")
+                            </small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Coordinator" asp-action="DownloadDocument" asp-route-documentId="@claim.Documents?.FirstOrDefault()?.DocumentId"
+                               class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-download me-1"></i>View Documents
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <form asp-action="VerifyClaim" method="post" class="d-inline">
+                                    <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                                    <button type="submit" class="btn btn-success w-100"
+                                            onclick="return confirm('Are you sure you want to verify this claim?')">
+                                        <i class="fas fa-check me-1"></i>Verify
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-danger w-100"
+                                        data-bs-toggle="modal" data-bs-target="#rejectModal@(claim.ClaimId)">
+                                    <i class="fas fa-times me-1"></i>Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reject Modal -->
+            <div class="modal fade" id="rejectModal@(claim.ClaimId)" tabindex="-1" aria-labelledby="rejectModalLabel@(claim.ClaimId)" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="rejectModalLabel@(claim.ClaimId)">
+                                <i class="fas fa-times-circle me-2"></i>Reject Claim #@claim.ClaimId
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form asp-action="RejectClaim" method="post">
+                            <div class="modal-body">
+                                <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                                <div class="mb-3">
+                                    <label for="rejectionReason@(claim.ClaimId)" class="form-label">
+                                        <strong>Rejection Reason:</strong>
+                                    </label>
+                                    <textarea name="rejectionReason" id="rejectionReason@(claim.ClaimId)"
+                                      class="form-control" rows="4"
+                                      placeholder="Please provide a reason for rejecting this claim..."
+                                      required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Reject Claim
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

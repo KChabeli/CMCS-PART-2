@@ -1,0 +1,207 @@
+﻿@model IEnumerable<CMCS.Models.Claim>
+@{
+    ViewData["Title"] = "Track Claims";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-primary">
+                <i class="fas fa-search me-2"></i>Track Claim Status
+            </h1>
+            <a asp-action="SubmitClaim" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Submit New Claim
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Claims Found</h4>
+                    <p class="text-muted">You haven't submitted any claims yet.</p>
+                    <a asp-action="SubmitClaim" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Submit Your First Claim
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var claim in Model.OrderByDescending(c => c.SubmittedDate))
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-@(claim.Status == "Pending" ? "warning" : claim.Status == "Approved" ? "success" : "danger") text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-invoice me-2"></i>Claim #@claim.ClaimId
+                            </h5>
+                            <span class="badge bg-light text-dark">
+                                @claim.Status
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Hours Worked:</strong><br>
+                                <span class="text-primary fs-5">@claim.HoursWorked</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Hourly Rate:</strong><br>
+                                <span class="text-primary fs-5">$@claim.HourlyRate.ToString("F2")</span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Total Amount:</strong><br>
+                                <span class="text-success fs-4 fw-bold">$@claim.TotalAmount.ToString("F2")</span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(claim.Notes))
+                        {
+                            <div class="mb-3">
+                                <strong>Notes:</strong><br>
+                                <p class="text-muted mb-0">@claim.Notes</p>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <strong>Submitted:</strong><br>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>@claim.SubmittedDate.ToString("MMM dd, yyyy HH:mm")
+                            </small>
+                        </div>
+
+                        @if (claim.ProcessedDate.HasValue)
+                        {
+                            <div class="mb-3">
+                                <strong>Processed:</strong><br>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-check me-1"></i>@claim.ProcessedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(claim.ProcessedBy))
+                        {
+                            <div class="mb-3">
+                                <strong>Processed By:</strong><br>
+                                <small class="text-muted">@claim.ProcessedBy</small>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(claim.RejectionReason))
+                        {
+                            <div class="mb-3">
+                                <strong>Rejection Reason:</strong><br>
+                                <div class="alert alert-danger mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>@claim.RejectionReason
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-grid gap-2">
+                            <a asp-action="UploadDocuments" asp-route-claimId="@claim.ClaimId"
+                               class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-file-upload me-1"></i>View Documents
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="progress mb-2" style="height: 8px;">
+                            @{
+                                var progress = claim.Status switch
+                                {
+                                    "Pending" => 33,
+                                    "Approved" => 100,
+                                    "Rejected" => 100,
+                                    _ => 0
+                                };
+                                var progressClass = claim.Status switch
+                                {
+                                    "Pending" => "bg-warning",
+                                    "Approved" => "bg-success",
+                                    "Rejected" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <div class="progress-bar @progressClass" role="progressbar"
+                                 style="width: @progress%" aria-valuenow="@progress"
+                                 aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                @if (claim.Status == "Pending")
+                                {
+                                    <i class="fas fa-clock me-1"></i>
+                                    @("Awaiting Review")
+                                }
+                                else if (claim.Status == "Approved")
+                                {
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    @("Approved")
+                                }
+                                else
+                                {
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    @("Rejected")
+                                }
+                            </small>
+                            <small class="text-muted">@progress% Complete</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Claim Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-warning">@Model.Count(c => c.Status == "Pending")</h3>
+                                <p class="text-muted mb-0">Pending</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-success">@Model.Count(c => c.Status == "Approved")</h3>
+                                <p class="text-muted mb-0">Approved</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-danger">@Model.Count(c => c.Status == "Rejected")</h3>
+                                <p class="text-muted mb-0">Rejected</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-primary">$@Model.Where(c => c.Status == "Approved").Sum(c => c.TotalAmount).ToString("F2")</h3>
+                            <p class="text-muted mb-0">Total Approved</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Upload Documents";
+    var claim = ViewBag.Claim as CMCS.Models.Claim;
+    var documents = ViewBag.Documents as List<CMCS.Models.Document>;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-primary">
+                <i class="fas fa-file-upload me-2"></i>Upload Supporting Documents
+            </h1>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (claim != null)
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Claim #@claim.ClaimId Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Hours Worked:</strong><br>
+                            <span class="text-primary">@claim.HoursWorked</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Hourly Rate:</strong><br>
+                            <span class="text-primary">$@claim.HourlyRate.ToString("F2")</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Total Amount:</strong><br>
+                            <span class="text-success fw-bold">$@claim.TotalAmount.ToString("F2")</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong><br>
+                            <span class="badge bg-@(claim.Status == "Pending" ? "warning" : claim.Status == "Approved" ? "success" : "danger")">
+                                @claim.Status
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload New Documents
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="UploadDocuments" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="claimId" value="@claim?.ClaimId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-file me-1"></i>Select Files
+                        </label>
+                        <input type="file" name="files" class="form-control" multiple
+                               accept=".pdf,.docx,.xlsx" required />
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Supported formats: PDF, DOCX, XLSX (Max 10MB per file)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-comment me-1"></i>File Descriptions (Optional)
+                        </label>
+                        <textarea name="descriptions" class="form-control" rows="3"
+                                  placeholder="Enter descriptions for each file (one per line)..."></textarea>
+                        <div class="form-text">Provide a brief description for each uploaded file.</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i>Upload Documents
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-folder-open me-2"></i>Uploaded Documents
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (documents != null && documents.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var doc in documents)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file-@(doc.FileName.EndsWith(".pdf") ? "pdf" : doc.FileName.EndsWith(".docx") || doc.FileName.EndsWith(".doc") ? "word" : "excel") text-primary me-2"></i>
+                                    <div>
+                                        <strong>@doc.FileName</strong>
+                                        @if (!string.IsNullOrEmpty(doc.Description))
+                                        {
+                                            <br>
+                                
+                                            <small class="text-muted">@doc.Description</small>
+                                        }
+                                        <br><small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>@doc.UploadedDate.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                                <a asp-action="DownloadDocument" asp-route-documentId="@doc.DocumentId"
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-folder-open fa-3x mb-3"></i>
+                        <p>No documents uploaded yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
